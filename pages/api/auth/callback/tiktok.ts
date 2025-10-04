@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "../../../lib/session";
+import { getSession } from "../../../../lib/session";
 
 const TIKTOK_TOKEN_URL = "https://www.tiktok.com/v2/oauth/token/";
 const getRedirectURI = () =>
