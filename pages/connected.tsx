@@ -1,49 +1,63 @@
-import { useState } from 'react';
+// extrait simplifié côté client
+import { useState } from "react";
 
+export default function Connected() {
+  const [url, setUrl] = useState("");
+  const [status, setStatus] = useState<string>("");
 
-export default function Connected(){
-const [file, setFile] = useState<File|null>(null);
-const [url, setUrl] = useState('');
-const [msg, setMsg] = useState('');
+  const handleInit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("Initialisation…");
+    const r = await fetch("/api/tiktok/init-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ video_url: url, title: "Importer via Clip2Tok" }),
+    });
+    const data = await r.json();
+    if (!r.ok) { setStatus(`Erreur: ${data.error}`); return; }
 
+    const upload_id = data.upload_id;
+    setStatus(`Brouillon créé (upload_id: ${upload_id}) — on vérifie le statut…`);
 
-async function sendFile(){
-if(!file) return;
-const fd = new FormData();
-fd.append('video', file);
-const r = await fetch('/api/tiktok/upload', { method:'POST', body: fd });
-const j = await r.json();
-setMsg(JSON.stringify(j));
-}
-async function sendUrl(){
-if(!url) return;
-const r = await fetch('/api/tiktok/upload-from-url', {
-method:'POST',
-headers:{ 'Content-Type':'application/json' },
-body: JSON.stringify({ url })
-});
-const j = await r.json();
-setMsg(JSON.stringify(j));
-}
+    // petit polling simple
+    const poll = async () => {
+      const rs = await fetch(`/api/tiktok/status?upload_id=${encodeURIComponent(upload_id)}`);
+      const ds = await rs.json();
+      if (!rs.ok) { setStatus(`Erreur statut: ${ds.error}`); return; }
 
+      // adapte selon le schéma exact renvoyé par l’API
+      const s = ds.data?.data?.status ?? ds.data?.status ?? "UNKNOWN";
+      setStatus(`Statut: ${s} — request_id: ${ds.data?.request_id || ds.data?.data?.request_id || "?"}`);
 
-return (
-<main style={{padding:24,fontFamily:'Inter,system-ui',maxWidth:760,margin:'0 auto'}}>
-<h1>Connecté ✔</h1>
-<p>Testez un upload en brouillon : fichier local ou URL publique.</p>
+      // boucle si pas terminé
+      if (["PENDING","PROCESSING"].includes(String(s).toUpperCase())) {
+        setTimeout(poll, 1500);
+      } else {
+        setStatus(prev => prev + " ✅");
+      }
+    };
+    poll();
+  };
 
+  return (
+    <main style={{padding:24, maxWidth:760, margin:"0 auto"}}>
+      <h1>Connecté ✓</h1>
+      <p>Testez un upload en brouillon : fichier local ou URL publique.</p>
 
-<h2>Upload fichier</h2>
-<input type="file" accept="video/mp4,video/*" onChange={e=>setFile(e.target.files?.[0]||null)} />
-<button onClick={sendFile} style={{marginLeft:8}}>Envoyer</button>
+      <h2>Upload depuis URL</h2>
+      <form onSubmit={handleInit}>
+        <input
+          type="url"
+          required
+          placeholder="https://…/video.mp4"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          style={{width:"100%", padding:8}}
+        />
+        <button type="submit" style={{marginTop:8}}>Envoyer</button>
+      </form>
 
-
-<h2 style={{marginTop:24}}>Upload depuis URL</h2>
-<input style={{width:'100%'}} placeholder="https://.../video.mp4" value={url} onChange={e=>setUrl(e.target.value)} />
-<button onClick={sendUrl} style={{marginTop:8}}>Envoyer</button>
-
-
-<pre style={{background:'#111',color:'#0f0',padding:12,marginTop:24,overflow:'auto'}}>{msg}</pre>
-</main>
-);
+      <div style={{marginTop:16, fontFamily:"monospace"}}>{status}</div>
+    </main>
+  );
 }
