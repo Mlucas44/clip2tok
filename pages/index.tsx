@@ -5,10 +5,7 @@ export default function Home(){
       <h1>Clip2Tok Studio</h1>
       <p>Connectez votre compte TikTok et exportez vos vidéos en brouillon
       (Inbox Upload).</p>
-
-      {/* <a href="http://localhost:8787/api/auth/tiktok" style={{display:'inlineblock',padding:'10px 16px',border:'1px solid #ccc',borderRadius:8}}>Se */}
-      <a href="https://undaughterly-leonidas-glaringly.ngrok-free.dev/api/auth/tiktok" style={{display:'inlineblock',padding:'10px 16px',border:'1px solid #ccc',borderRadius:8}}>Se
-      connecter avec TikTok</a>
+      <a href="/api/auth/tiktok" style={{display:'inlineblock',padding:'10px 16px',border:'1px solid #ccc',borderRadius:8}}>Se connecter avec TikTok</a>
       <section style={{marginTop:24}}>
         <h2>Pages utiles</h2>
         <ul>
