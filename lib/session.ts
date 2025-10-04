@@ -1,5 +1,5 @@
 // web/lib/session.ts
-import { IronSessionOptions } from "iron-session";
+import type { IronSessionOptions } from "iron-session";   
 import { getIronSession } from "iron-session";
 import type { NextApiRequest, NextApiResponse } from "next";
 
