@@ -36,11 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = JSON.parse(raw);
     const payload = data.data ?? data;
-    // TikTok renvoie souvent request_id + upload_id / task_id
+
     return res.status(200).json({
       ok: true,
       request_id: payload.request_id ?? data.request_id,
-      upload_id:  payload.upload_id  ?? payload.task_id,
+      publish_id: payload.publish_id,          // 👈 c'est celui qu'on utilisera
       raw: payload,
     });
   } catch (e: any) {

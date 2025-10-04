@@ -16,21 +16,23 @@ export default function Connected() {
     const data = await r.json();
     if (!r.ok) { setStatus(`Erreur: ${data.error}`); return; }
 
-    const upload_id = data.upload_id;
-    setStatus(`Brouillon créé (upload_id: ${upload_id}) — on vérifie le statut…`);
+    const publish_id = data.publish_id;  // 👈 plus "upload_id"
+    setStatus(`Brouillon créé (publish_id: ${publish_id}) — on vérifie le statut…`);
 
     // petit polling simple
     const poll = async () => {
-      const rs = await fetch(`/api/tiktok/status?upload_id=${encodeURIComponent(upload_id)}`);
-      const ds = await rs.json();
-      if (!rs.ok) { setStatus(`Erreur statut: ${ds.error}`); return; }
+    const rs = await fetch(`/api/tiktok/status?publish_id=${encodeURIComponent(publish_id)}`);
+    const ds = await rs.json();
+    if (!rs.ok) { setStatus(`Erreur statut: ${ds.error}`); return; }
 
-      // adapte selon le schéma exact renvoyé par l’API
-      const s = ds.data?.data?.status ?? ds.data?.status ?? "UNKNOWN";
-      setStatus(`Statut: ${s} — request_id: ${ds.data?.request_id || ds.data?.data?.request_id || "?"}`);
+    // adapte selon la structure renvoyée par TikTok
+    const payload = ds.data?.data ?? ds.data;
+    const s = payload?.status ?? payload?.task_status ?? "UNKNOWN";
+    const req = payload?.request_id ?? ds.data?.request_id ?? "?";
 
-      // boucle si pas terminé
-      if (["PENDING","PROCESSING"].includes(String(s).toUpperCase())) {
+    setStatus(`Statut: ${s} — request_id: ${req}`);
+
+      if (["PENDING","PROCESSING","IN_PROGRESS"].includes(String(s).toUpperCase())) {
         setTimeout(poll, 1500);
       } else {
         setStatus(prev => prev + " ✅");
