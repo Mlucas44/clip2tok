@@ -1,7 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "../../../../lib/session";
 
-const TIKTOK_TOKEN_URL = "https://www.tiktok.com/v2/oauth/token/";
+const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
+
+// const TIKTOK_TOKEN_URL = "https://www.tiktok.com/v2/oauth/token/";
 const getRedirectURI = () =>
   `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/tiktok`;
 
