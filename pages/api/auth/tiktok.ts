@@ -8,7 +8,9 @@ const getRedirectURI = () =>
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
   const state = crypto.randomUUID();
-  session.set("oauth", { state, startedAt: Date.now() });
+
+  // v8: on assigne directement
+  session.oauth = { state, startedAt: Date.now() };
   await session.save();
 
   const params = new URLSearchParams({

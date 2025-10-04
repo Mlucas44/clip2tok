@@ -10,7 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getSession(req, res);
 
   if (error) return res.redirect("/?error=" + error);
-  if (!code || !state || session.get("oauth")?.state !== state) {
+  // v8: on lit directement
+  if (!code || !state || session.oauth?.state !== state) {
     return res.redirect("/?error=invalid_state_or_code");
   }
 
@@ -27,18 +28,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
-
   if (!r.ok) return res.redirect("/?error=token_exchange_failed");
   const data = await r.json();
 
-  // Démo: on garde en session (en prod, chiffre en DB)
-  session.set("user", {
+  // v8: on assigne et on supprime l’oauth
+  session.user = {
     open_id: data.open_id,
     access_token: data.access_token,
     expires_in: Date.now() + (data.expires_in ?? 0) * 1000,
     scope: data.scope,
-  });
-  session.set("oauth", undefined);
+  };
+  delete session.oauth;
   await session.save();
 
   res.redirect("/connected");
