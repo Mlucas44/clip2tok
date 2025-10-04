@@ -1,8 +1,23 @@
 // web/lib/session.ts
-import { getIronSession, type SessionOptions } from "iron-session";
+import {
+  getIronSession,
+  type SessionOptions,
+  type IronSession,
+} from "iron-session";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export const sessionOptions: SessionOptions  = {
+// 👇 Ton modèle de session
+export interface SessionData {
+  oauth?: { state: string; startedAt: number };
+  user?: {
+    open_id: string;
+    access_token: string;
+    expires_in: number; // timestamp ms (Date.now() + ...)
+    scope?: string;
+  };
+}
+
+export const sessionOptions: SessionOptions = {
   cookieName: "clip2tok_sess",
   password: process.env.SESSION_SECRET!, // 32+ chars
   cookieOptions: {
@@ -11,6 +26,10 @@ export const sessionOptions: SessionOptions  = {
   },
 };
 
-export async function getSession(req: NextApiRequest, res: NextApiResponse) {
-  return getIronSession(req, res, sessionOptions);
+// 👇 On renvoie une IronSession typée
+export async function getSession(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<IronSession<SessionData>> {
+  return getIronSession<SessionData>(req, res, sessionOptions);
 }
