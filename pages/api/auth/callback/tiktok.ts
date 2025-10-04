@@ -7,20 +7,45 @@ const getRedirectURI = () =>
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    // 0) Sanity checks ENV
+    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
+      return res.status(500).json({ error: "SESSION_SECRET_invalid" });
+    }
+    if (!process.env.TIKTOK_CLIENT_KEY) {
+      return res.status(500).json({ error: "TIKTOK_CLIENT_KEY_missing" });
+    }
+    if (!process.env.TIKTOK_CLIENT_SECRET) {
+      return res.status(500).json({ error: "TIKTOK_CLIENT_SECRET_missing" });
+    }
+    if (!process.env.NEXT_PUBLIC_BASE_URL) {
+      return res.status(500).json({ error: "NEXT_PUBLIC_BASE_URL_missing" });
+    }
+
     const { code, state, error } = req.query as Record<string, string>;
     const session = await getSession(req, res);
 
-    if (error) return res.redirect("/?error=" + error);
-    if (!code || !state || session.oauth?.state !== state) {
-      return res.redirect("/?error=invalid_state_or_code");
+    if (error) return res.status(400).json({ error: "oauth_error_param", detail: error });
+
+    if (!code || !state) {
+      return res.status(400).json({ error: "missing_code_or_state", code, state });
     }
 
+    // 1) Vérifie que le state en session existe (cookie OK ?)
+    if (!session.oauth?.state) {
+      return res.status(400).json({ error: "missing_session_oauth_state" });
+    }
+    if (session.oauth.state !== state) {
+      return res.status(400).json({ error: "state_mismatch", expected: session.oauth.state, got: state });
+    }
+
+    // 2) Échange code → token
+    const redirectUri = getRedirectURI();
     const body = new URLSearchParams({
-      client_key: process.env.TIKTOK_CLIENT_KEY ?? "",
-      client_secret: process.env.TIKTOK_CLIENT_SECRET ?? "",
+      client_key: process.env.TIKTOK_CLIENT_KEY!,
+      client_secret: process.env.TIKTOK_CLIENT_SECRET!,
       code,
       grant_type: "authorization_code",
-      redirect_uri: getRedirectURI(),
+      redirect_uri: redirectUri,
     });
 
     const r = await fetch(TIKTOK_TOKEN_URL, {
@@ -29,11 +54,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body,
     });
 
-    // ← si TikTok renvoie autre chose que 2xx, log le texte brut
     if (!r.ok) {
       const text = await r.text();
-      console.error("TT token exchange failed", r.status, text);
-      return res.redirect("/?error=token_exchange_failed");
+      return res.status(502).json({
+        error: "token_exchange_failed",
+        status: r.status,
+        redirect_uri: redirectUri,
+        raw: text.slice(0, 512),
+      });
     }
 
     let data: any;
@@ -41,12 +69,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data = await r.json();
     } catch (e) {
       const text = await r.text();
-      console.error("TT token not JSON:", text);
-      return res.redirect("/?error=token_parse_failed");
+      return res.status(502).json({ error: "token_parse_failed", raw: text.slice(0, 512) });
     }
 
-    // Certains comptes renvoient sous data.data.{...}
     const payload = data.data ?? data;
+    if (!payload?.access_token || !payload?.open_id) {
+      return res.status(502).json({ error: "token_payload_incomplete", payload });
+    }
 
     session.user = {
       open_id: payload.open_id,
@@ -59,7 +88,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.redirect("/connected");
   } catch (e: any) {
-    console.error("Callback crash:", e?.message || e);
-    return res.status(500).json({ error: "callback_crash" });
+    return res.status(500).json({ error: "callback_crash", message: e?.message });
   }
 }
