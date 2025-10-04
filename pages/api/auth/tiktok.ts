@@ -9,6 +9,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getSession(req, res);
   const state = crypto.randomUUID();
 
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
+  return res.status(500).json({ error: "Invalid SESSION_SECRET" });
+  }
+  if (!process.env.TIKTOK_CLIENT_KEY) {
+    return res.status(500).json({ error: "Missing TIKTOK_CLIENT_KEY" });
+  }
+  if (!process.env.NEXT_PUBLIC_BASE_URL) {
+    return res.status(500).json({ error: "Missing NEXT_PUBLIC_BASE_URL" });
+  }
+
   // v8: on assigne directement
   session.oauth = { state, startedAt: Date.now() };
   await session.save();
