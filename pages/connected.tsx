@@ -21,16 +21,18 @@ export default function Connected() {
 
     // petit polling simple
     const poll = async () => {
-    const rs = await fetch(`/api/tiktok/status?publish_id=${encodeURIComponent(publish_id)}`);
-    const ds = await rs.json();
-    if (!rs.ok) { setStatus(`Erreur statut: ${ds.error}`); return; }
+      const rs = await fetch("/api/tiktok/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publish_id }),
+      });
+      const ds = await rs.json();
+      if (!rs.ok) { setStatus(`Erreur statut: ${ds.error}`); return; }
 
-    // adapte selon la structure renvoyée par TikTok
-    const payload = ds.data?.data ?? ds.data;
-    const s = payload?.status ?? payload?.task_status ?? "UNKNOWN";
-    const req = payload?.request_id ?? ds.data?.request_id ?? "?";
-
-    setStatus(`Statut: ${s} — request_id: ${req}`);
+      const payload = ds.data?.data ?? ds.data;
+      const s = payload?.status ?? payload?.task_status ?? "UNKNOWN";
+      const reqId = payload?.request_id ?? ds.data?.request_id ?? "?";
+      setStatus(`Statut: ${s} — request_id: ${reqId}`);
 
       if (["PENDING","PROCESSING","IN_PROGRESS"].includes(String(s).toUpperCase())) {
         setTimeout(poll, 1500);
