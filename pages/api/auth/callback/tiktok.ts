@@ -54,22 +54,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body,
     });
 
+    // ✅ Lire UNE fois le corps brut
+    const raw = await r.text();
+
     if (!r.ok) {
-      const text = await r.text();
       return res.status(502).json({
         error: "token_exchange_failed",
         status: r.status,
         redirect_uri: redirectUri,
-        raw: text.slice(0, 512),
+        raw: raw.slice(0, 512),
       });
     }
 
     let data: any;
     try {
-      data = await r.json();
-    } catch (e) {
-      const text = await r.text();
-      return res.status(502).json({ error: "token_parse_failed", raw: text.slice(0, 512) });
+      data = JSON.parse(raw);              // parse JSON à partir du texte
+    } catch {
+      return res.status(502).json({
+        error: "token_parse_failed",
+        raw: raw.slice(0, 512),
+      });
     }
 
     const payload = data.data ?? data;
@@ -87,6 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await session.save();
 
     return res.redirect("/connected");
+
   } catch (e: any) {
     return res.status(500).json({ error: "callback_crash", message: e?.message });
   }
