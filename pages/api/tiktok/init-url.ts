@@ -9,6 +9,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const token = session.user?.access_token;
   if (!token) return res.status(401).json({ error: "not_authenticated" });
 
+  // 1) si un publish_id est encore en cours, renvoyer celui-ci
+  if (session.last_publish_id) {
+    return res.status(200).json({
+      ok: true,
+      publish_id: session.last_publish_id,
+      already_in_progress: true,
+    });
+  }
+
   const { video_url, title } = req.body ?? {};
   if (!video_url) return res.status(400).json({ error: "missing_video_url" });
 
@@ -20,27 +29,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         "Content-Type": "application/json; charset=utf-8",
       },
       body: JSON.stringify({
-        source_info: {
-          source: "PULL_FROM_URL",
-          video_url,                 // URL https publique (ton domaine vérifié ou CDN)
-        },
-        post_mode: { mode: "DRAFT" }, // brouillon
-        title: title?.toString().slice(0, 150) ?? undefined,
+        source_info: { source: "PULL_FROM_URL", video_url },
+        post_mode: { mode: "DRAFT" },
+        title: title?.toString().slice(0, 150),
       }),
     });
 
     const raw = await r.text();
     if (!r.ok) {
-      return res.status(r.status).json({ error: "init_failed", raw: raw.slice(0, 500) });
+      // TikTok renvoie un JSON avec error.code/message
+      try {
+        const err = JSON.parse(raw);
+        const code = err?.error?.code;
+        if (code === "spam_risk_too_many_pending_share") {
+          return res.status(429).json({
+            error: "too_many_pending",
+            message:
+              "TikTok limite le nombre d’uploads en attente. Attendez que l’envoi actuel se termine puis réessayez.",
+            tiktok: err,
+          });
+        }
+      } catch {}
+      return res.status(r.status).json({ error: "init_failed", raw: raw.slice(0, 600) });
     }
 
     const data = JSON.parse(raw);
     const payload = data.data ?? data;
 
+    // 2) stocker publish_id en session pour bloquer les doublons
+    session.last_publish_id = payload.publish_id;
+    await session.save();
+
     return res.status(200).json({
       ok: true,
-      request_id: payload.request_id ?? data.request_id,
-      publish_id: payload.publish_id,          // 👈 c'est celui qu'on utilisera
+      publish_id: payload.publish_id,
       raw: payload,
     });
   } catch (e: any) {
