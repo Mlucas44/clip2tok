@@ -14,8 +14,8 @@ export interface SessionData {
     access_token: string;
     expires_in: number; // timestamp ms (Date.now() + ...)
     scope?: string;
-    last_publish_id?: string;
   };
+  last_publish_id?: string;
 }
 
 export const sessionOptions: SessionOptions = {
