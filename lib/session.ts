@@ -15,7 +15,7 @@ export interface SessionData {
       openId?: string; // si historique différent
       scopes?: string[];
       scope?: string;  // fallback string
-      // ...autres champs utiles
+      expires_at?: number;
     };
   last_publish_id?: string;
 }
