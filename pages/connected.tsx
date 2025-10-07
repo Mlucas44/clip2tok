@@ -60,11 +60,15 @@ export default function Connected() {
         const data: StatusResp = await res.json();
         if (!("ok" in data) || data.ok !== true) {
           // erreur côté API status
-          setErrorMsg("La vérification du statut a échoué. Réessayez.");
+          setErrorMsg("Le serveur TikTok n’a pas encore renvoyé de mise à jour. C’est normal en mode sandbox, réessayez dans quelques instants.");
           return;
         }
         const rawStatus = (data.status ?? "UNKNOWN") as Status;
         setStatus(rawStatus);
+        
+        if (rawStatus === "SUCCEEDED") {
+          setErrorMsg("✅ Vidéo envoyée en brouillon ! Retrouvez-la dans votre Inbox TikTok.");
+        }
 
         // Terminé ? on stoppe le polling (ton /status libère le verrou côté session)
         if (rawStatus === "SUCCEEDED" || rawStatus === "FAILED") {

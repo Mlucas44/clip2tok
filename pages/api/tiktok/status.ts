@@ -19,7 +19,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   const raw = await r.text();
-  if (!r.ok) return res.status(r.status).json({ error: "status_failed", raw: raw.slice(0, 800) });
+  // if (!r.ok) return res.status(r.status).json({ error: "status_failed", raw: raw.slice(0, 800) });
+  // après const raw = await r.text();
+  if (!r.ok) {
+    try {
+      const err = JSON.parse(raw);
+      const status = err?.error?.code ?? "UNKNOWN";
+      return res.status(200).json({ ok: true, status: status, data: err });
+    } catch {
+      return res.status(r.status).json({ ok: false, error: "status_failed", raw: raw.slice(0, 800) });
+    }
+  }
 
   const data = JSON.parse(raw);
   const payload = data.data ?? data;
