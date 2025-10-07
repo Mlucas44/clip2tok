@@ -10,11 +10,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 export interface SessionData {
   oauth?: { state: string; startedAt: number };
   user?: {
-    open_id: string;
-    access_token: string;
-    expires_in: number; // timestamp ms (Date.now() + ...)
-    scope?: string;
-  };
+      access_token?: string;
+      open_id?: string;
+      openId?: string; // si historique différent
+      scopes?: string[];
+      scope?: string;  // fallback string
+      // ...autres champs utiles
+    };
   last_publish_id?: string;
 }
 
