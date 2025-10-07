@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     session.user = {
       open_id: payload.open_id,
       access_token: payload.access_token,
-      expires_in: Date.now() + (payload.expires_in ?? 0) * 1000,
+      expires_at: Date.now() + ((payload.expires_in ?? 0) * 1000),
       scope: payload.scope,
     };
     delete session.oauth;
