@@ -1,9 +1,10 @@
-export default function Support(){
-return (
-<main style={{padding:24,fontFamily:'Inter,system-ui'}}>
-<h1>Support</h1>
-<p>Contact : support@votre-domaine.com • Délai de réponse cible : 48h
-ouvrées.</p>
-</main>
-);
+// app/support/page.tsx
+export default function Support() {
+  return (
+    <main className="mx-auto max-w-2xl p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">Support</h1>
+      <p>Besoin d’aide ? Écrivez-nous : <a className="underline" href="mailto:support@mlucas.store">support@mlucas.store</a></p>
+      <p>Indiquez si possible votre <span className="font-mono">request_id</span> TikTok.</p>
+    </main>
+  );
 }
