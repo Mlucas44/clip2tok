@@ -96,60 +96,62 @@ export default function Connected() {
   return (
     <>
       <h1 className="h1">Connecté ✓</h1>
-      <div className="mt12">
-        <a className="btn" href="/api/auth/logout">Se déconnecter</a>
-      </div>
       <p className="muted">Testez un upload en brouillon : fichier local ou URL publique.</p>
 
-      <section className="card mt16">
-        <h2 className="h2">Upload depuis URL</h2>
-        <input className="input" placeholder="https://…/video.mp4" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} />
-        <div className="mt12" />
-        <input className="input" placeholder="Titre (optionnel)" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <div className="mt12" />
-        <button className="btn primary" onClick={onInit} disabled={!canSend} title={!canSend ? "Envoi verrouillé pendant le traitement en cours" : "Envoyer"}>
-          {initLoading ? "Initialisation…" : "Envoyer"}
-        </button>
-
-        <div className="mt16 kv">
-          <div className="muted">publish_id</div>
-          <div className="mono">
-            {publishId ?? "—"}{" "}
-            {publishId && <button className="btn" style={{marginLeft:8}} onClick={copyPublishId}>Copier</button>}
+      <div className="two-col mt16">
+        <section className="card">
+          <div className="card-header">
+            <h2 className="card-title">Upload depuis URL</h2>
+            <div className="muted">Statut: <span className={`badge ${status === "SUCCEEDED" ? "success" : status === "PENDING" || status === "PROCESSING" ? "warn" : ""}`}>{status ?? "—"} {polling ? "⏳" : ""}</span></div>
           </div>
-          <div className="muted">status</div>
-          <div>
-            <span className={`badge ${status === "SUCCEEDED" ? "success" : status === "PENDING" || status === "PROCESSING" ? "warn" : ""}`}>
-              {status ?? "—"} {polling ? "⏳" : ""}
-            </span>
+
+          <input className="input" placeholder="https://…/video.mp4" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} />
+          <div className="mt12" />
+          <input className="input" placeholder="Titre (optionnel)" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <div className="mt12" />
+          <button className="btn primary" onClick={onInit} disabled={!canSend} title={!canSend ? "Envoi verrouillé pendant le traitement en cours" : "Envoyer"}>
+            {initLoading ? <><span className="spinner"/>Initialisation…</> : "Envoyer"}
+          </button>
+
+          <div className="mt16 kv">
+            <div className="muted">publish_id</div>
+            <div className="mono">
+              {publishId ?? "—"}{" "}
+              {publishId && <button className="btn" style={{marginLeft:8}} onClick={copyPublishId}>Copier</button>}
+            </div>
+            <div className="muted">&nbsp;</div>
+            <div />
           </div>
-        </div>
 
-        {errorMsg && <div className="alert info mt16">{errorMsg}</div>}
-      </section>
+          {errorMsg && <div className="alert info mt16">{errorMsg}</div>}
+        </section>
 
-      <section className="card mt24">
-        <h3 className="h2">Historique (local)</h3>
-        <div style={{ overflowX: "auto", marginTop: 8 }}>
-          <table className="table">
-            <thead>
-              <tr><th>Date</th><th>Titre</th><th>Source</th><th>publish_id</th></tr>
-            </thead>
-            <tbody>
-              {history.length === 0 ? (
-                <tr><td colSpan={4} className="muted">Aucun enregistrement.</td></tr>
-              ) : history.map((h, i) => (
-                <tr key={i}>
-                  <td>{new Date(h.date).toLocaleString()}</td>
-                  <td>{h.title || "—"}</td>
-                  <td><span title={h.source} style={{display:"inline-block",maxWidth:360,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{h.source}</span></td>
-                  <td className="mono">{h.publish_id}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        <section className="card">
+          <h3 className="h2">Historique (local)</h3>
+          <div style={{ overflowX: "auto", marginTop: 8 }}>
+            <table className="table">
+              <thead>
+                <tr><th>Date</th><th>Titre</th><th>Source</th><th>publish_id</th></tr>
+              </thead>
+              <tbody>
+                {history.length === 0 ? (
+                  <tr><td colSpan={4} className="muted">Aucun enregistrement.</td></tr>
+                ) : history.map((h, i) => (
+                  <tr key={i}>
+                    <td>{new Date(h.date).toLocaleString()}</td>
+                    <td>{h.title || "—"}</td>
+                    <td><span title={h.source} style={{display:"inline-block",maxWidth:360,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{h.source}</span></td>
+                    <td className="mono">{h.publish_id}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </>
   );
 }
+
+// Apply full-page pattern to this page's main container
+export const useFullPattern = true;

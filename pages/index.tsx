@@ -1,25 +1,3 @@
-// export default function Home() {
-//   return (
-//     <>
-//       <h1 className="h1">Clip2Tok Studio</h1>
-//       <p className="muted">Connectez votre compte TikTok et exportez vos vidéos en brouillon (Inbox Upload).</p>
-
-//       <div className="mt16">
-//         <a href="/api/auth/tiktok" className="btn primary">Se connecter avec TikTok</a>
-//       </div>
-
-//       <div className="card mt32">
-//         <h2 className="h2">Accès rapide</h2>
-//         <div style={{display:"flex", gap:12, flexWrap:"wrap", marginTop:8}}>
-//           <a className="btn" href="/connected">Connected</a>
-//           <a className="btn" href="/settings">Paramètres</a>
-//         </div>
-//       </div>
-//     </>
-//   );
-// }
-
-
 // pages/index.tsx
 import type { GetServerSideProps } from "next";
 import { getSession } from "../lib/session";
@@ -38,34 +16,24 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 export default function Home() {
   return (
     <>
-      <h1 className="h1">Clip2Tok Studio</h1>
-      <p className="muted">
-        Connectez votre compte TikTok et exportez vos vidéos en brouillon (Inbox Upload).
-      </p>
+      <section className="hero hero--pattern" style={{ textAlign: 'center', padding: '80px 20px' }}>
+        <h1 className="h1" style={{ fontSize: 56, lineHeight: 1.03 }}>
+          Importer en brouillon.
+          <br />
+          <span style={{ color: 'var(--primary)' }}>Simplifiez vos uploads TikTok.</span>
+        </h1>
 
-      {/* Ce bouton ne s’affichera que si non connecté via le header dynamique (ci-dessous) */}
-      <div className="mt16">
-        <a href="/api/auth/tiktok" className="btn primary">Se connecter avec TikTok</a>
-      </div>
+        <p className="muted" style={{ maxWidth: 720, margin: '14px auto 0', fontSize: 17 }}>
+          Connexion instantanée — Fichier ou URL — Suivi en temps réel.
+        </p>
 
-      <div className="card mt32">
-        <h2 className="h2">Accès rapide</h2>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-          <a className="btn" href="/connected">Connected</a>
-          <a className="btn" href="/settings">Paramètres</a>
+        <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/api/auth/tiktok" className="btn primary">Se connecter et importer</a>
+          <a href="#" className="btn">Voir la démo</a>
         </div>
-      </div>
-
-      <section className="card mt24">
-        <h2 className="h2">Pages utiles</h2>
-        <ul>
-          <li><a href="/privacy">Confidentialité</a></li>
-          <li><a href="/terms">Conditions</a></li>
-          <li><a href="/support">Support</a></li>
-          <li><a href="/deletion">Suppression de données</a></li>
-          <li><a href="/settings">Paramètres</a></li>
-        </ul>
       </section>
+
+      
     </>
   );
 }

@@ -34,20 +34,22 @@ export default function App({ Component, pageProps }: AppProps) {
               <span className="btn ghost" style={{ opacity: .6 }}>…</span>
             ) : authed ? (
               <>
-                <a className="btn ghost" href="/connected">Connected</a>
+                <a className="btn ghost" href="/connected">Connecté</a>
                 <a className="btn ghost" href="/settings">Paramètres</a>
                 {/* Déconnexion */}
                 <a className="btn" href="/api/auth/logout">Se déconnecter</a>
               </>
             ) : (
-              // Non connecté → bouton login
-              <a className="btn primary" href="/api/auth/tiktok">Se connecter avec TikTok</a>
+              // Non connecté → bouton login discret (évite duplication depuis la landing)
+              <a className="btn" href="/api/auth/tiktok" style={{ padding: '8px 12px', fontSize: 14, background: 'transparent', border: '1px solid rgba(24,33,60,.06)' }}>
+                Se connecter
+              </a>
             )}
           </nav>
         </div>
       </header>
 
-      <main className="container">
+          <main className={"container" + ((Component as any).useFullPattern ? " hero--pattern main--full" : "")}>
         <Component {...pageProps} />
       </main>
 
