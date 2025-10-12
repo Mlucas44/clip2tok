@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "../../../../lib/session";
+import { isAllowedOpenId } from "../../../../lib/beta";
 
 const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 
@@ -90,9 +91,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       scope: payload.scope,
     };
     delete session.oauth;
-    await session.save();
 
-    return res.redirect("/connected");
+    if (!isAllowedOpenId(session.user?.open_id)) {
+      // pas autorisé → on nettoie et on redirige vers /beta
+      await session.destroy?.();
+      return res.writeHead(302, { Location: "/beta" }).end();
+    }
+
+    await session.save();
+    res.writeHead(302, { Location: "/connected" }).end();
+
+    // return res.redirect("/connected");
 
   } catch (e: any) {
     return res.status(500).json({ error: "callback_crash", message: e?.message });
