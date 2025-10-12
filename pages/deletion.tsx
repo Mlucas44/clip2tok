@@ -1,22 +1,28 @@
-// app/deletion/page.tsx
-"use client";
 import { useState } from "react";
 
 export default function Deletion() {
   const [done, setDone] = useState(false);
   const callDelete = async () => {
-    const res = await fetch("/api/me/delete", { method: "POST" });
+    // Si ton endpoint est /api/auth/delete, garde cette ligne :
+    const res = await fetch("/api/auth/delete", { method: "POST" });
+    // Si tu utilises /api/me/delete, remplace par: "/api/me/delete"
     if (res.ok) setDone(true);
   };
+
   return (
-    <main className="mx-auto max-w-2xl p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Suppression des données</h1>
-      <p>Vous pouvez demander la suppression immédiate des données stockées côté serveur (principalement la session et logs corrélés).</p>
-      <div className="space-x-3">
-        <a className="underline" href="mailto:privacy@tondomaine.com">Envoyer un email</a>
-        <button className="px-3 py-2 rounded-md bg-black text-white" onClick={callDelete}>Supprimer via l’API</button>
+    <>
+      <h1 className="h1">Suppression des données</h1>
+      <div className="card">
+        <p>
+          Vous pouvez demander la suppression immédiate des données stockées côté serveur
+          (principalement la session, le <span className="mono">publish_id</span> en cours et les logs corrélés).
+        </p>
+        <div style={{display:"flex", gap:12, flexWrap:"wrap"}} className="mt12">
+          <a className="btn" href="mailto:privacy@tondomaine.com">Envoyer un email</a>
+          <button className="btn danger" onClick={callDelete}>Supprimer via l’API</button>
+        </div>
+        {done && <div className="alert info mt16">OK supprimé.</div>}
       </div>
-      {done && <p className="text-green-700">OK supprimé.</p>}
-    </main>
+    </>
   );
 }

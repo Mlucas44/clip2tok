@@ -1,0 +1,107 @@
+:root{
+  --bg: #f7f8fb;
+  --panel: rgba(255,255,255,.6);
+  --panel-solid: #ffffff;
+  --text: #0c1324;
+  --muted: #6b7280;
+  --primary: #3b82f6;      /* bleu */
+  --primary-strong:#1d4ed8;
+  --border: rgba(24,33,60,.12);
+  --shadow: 0 12px 30px rgba(12,19,36,.08);
+  --radius: 16px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:
+    radial-gradient(1200px 800px at 10% -10%, #e9f1ff 0%, transparent 60%),
+    radial-gradient(1000px 700px at 110% 0%, #f2f7ff 0%, transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container{ max-width: 980px; margin: 0 auto; padding: 24px 20px; }
+.app-root{ min-height: 100dvh; display:flex; flex-direction:column; }
+.site-header{
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: saturate(1.2) blur(10px);
+  background: rgba(255,255,255,.7);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+
+.brand{ display:flex; align-items:center; gap:10px; color:inherit; text-decoration:none; font-weight:700; }
+.brand:hover{ opacity:.9 }
+.brand-dot{ width:10px; height:10px; border-radius:999px; background: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
+
+.nav{ display:flex; gap:10px; }
+
+.site-footer{
+  margin-top:auto;
+  border-top: 1px solid var(--border);
+  background: rgba(255,255,255,.5);
+  backdrop-filter: blur(8px);
+}
+.footer-inner{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding: 16px 20px; }
+.footer-links{ display:flex; gap:16px; }
+.footer-links a{ color: var(--muted); text-decoration:none; }
+.footer-links a:hover{ color: var(--primary) }
+
+.h1{ font-size: 36px; font-weight: 800; margin: 10px 0 6px; letter-spacing:.2px; }
+.h2{ font-size: 22px; font-weight: 700; margin: 16px 0 10px; }
+.muted{ color: var(--muted) }
+
+.card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--panel-solid); color: var(--text);
+  text-decoration:none; cursor: pointer; transition: .15s ease;
+  box-shadow: 0 2px 0 rgba(12,19,36,.04);
+}
+.btn:hover{ transform: translateY(-1px); box-shadow: 0 6px 18px rgba(12,19,36,.08); }
+.btn:disabled{ opacity:.6; cursor:not-allowed }
+.btn.primary{ background: var(--primary); border-color: var(--primary-strong); color: #fff; }
+.btn.primary:hover{ background: var(--primary-strong) }
+.btn.ghost{ background: rgba(255,255,255,.75) }
+
+.input{
+  width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border);
+  background: rgba(255,255,255,.75); color: var(--text); outline:none;
+}
+.input::placeholder{ color: #9aa1ad }
+
+.kv{ display:grid; grid-template-columns: 180px 1fr; gap:10px 18px; font-size:14px; }
+.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+.table{ width:100%; border-collapse: collapse; font-size:14px; }
+.table th, .table td{ border:1px solid var(--border); padding: 10px; text-align:left; }
+.table thead th{ background: #f3f7ff; color:#1f2a44 }
+
+.alert{
+  padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: #fff; box-shadow: var(--shadow);
+}
+.alert.error{ background:#fff5f5; border-color:#ffd3d3; color:#7a1111 }
+.alert.info{ background:#f5f9ff; border-color:#d3e3ff; color:#102e6b }
+.badge{
+  display:inline-flex; align-items:center; gap:8px; padding:4px 10px; border-radius:999px;
+  background:#eef3ff; color:#0f2e68; border:1px solid #d7e3ff; font-size:12px;
+}
+.badge.success{ background:#eafaf3; border-color:#c7f0de; color:#0f5132 }
+.badge.warn{ background:#fff9e6; border-color:#ffe7a1; color:#6b4e00 }
+
+.mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px} .mt24{margin-top:24px} .mt32{margin-top:32px}
