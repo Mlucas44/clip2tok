@@ -24,7 +24,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <div className="container header-inner">
           <a href="/" className="brand">
             <span className="brand-dot" />
-            <span>Clip2Tok Studio</span>
+            <span>StudioReels</span>
           </a>
 
           {/* Nav dynamique */}
@@ -61,7 +61,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <a href="/support">Support</a>
             <a href="/deletion">Suppression de données</a>
           </nav>
-          <small>© {new Date().getFullYear()} Clip2Tok Studio</small>
+          <small>© {new Date().getFullYear()} StudioReels</small>
         </div>
       </footer>
     </div>

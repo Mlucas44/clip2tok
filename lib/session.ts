@@ -21,7 +21,7 @@ export interface SessionData {
 }
 
 export const sessionOptions: SessionOptions = {
-  cookieName: "clip2tok_sess",
+  cookieName: "studioReels_sess",
   password: process.env.SESSION_SECRET!, // 32+ chars
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
