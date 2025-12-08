@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const params = new URLSearchParams({
     client_key: process.env.TIKTOK_CLIENT_KEY!,
     response_type: "code",
-    scope: "user.info.basic", //video.upload
+    scope: "video.upload",
     redirect_uri: getRedirectURI(),
     state,
   });
