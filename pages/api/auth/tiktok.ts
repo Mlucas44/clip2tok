@@ -3,7 +3,7 @@ import { getSession } from "../../../lib/session";
 
 const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
 const getRedirectURI = () =>
-  `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/tiktok`;
+  `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/tiktok/`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const params = new URLSearchParams({
     client_key: process.env.TIKTOK_CLIENT_KEY!,
     response_type: "code",
-    scope: "video.upload",
+    scope: "user.info.basic", //video.upload
     redirect_uri: getRedirectURI(),
     state,
   });
