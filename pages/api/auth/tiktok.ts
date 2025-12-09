@@ -26,10 +26,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const params = new URLSearchParams({
     client_key: process.env.TIKTOK_CLIENT_KEY!,
     response_type: "code",
-    scope: "video.upload",
+    scope: "user.info.basic,video.upload",
     redirect_uri: getRedirectURI(),
     state,
   });
+console.log("TikTok redirect_uri =", getRedirectURI());
 
   res.redirect(`${TIKTOK_AUTH_URL}?${params.toString()}`);
 }
