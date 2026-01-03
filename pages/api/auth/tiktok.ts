@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const state = crypto.randomUUID();
 
   if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
-  return res.status(500).json({ error: "Invalid SESSION_SECRET" });
+    return res.status(500).json({ error: "Invalid SESSION_SECRET" });
   }
   if (!process.env.TIKTOK_CLIENT_KEY) {
     return res.status(500).json({ error: "Missing TIKTOK_CLIENT_KEY" });
@@ -26,11 +26,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const params = new URLSearchParams({
     client_key: process.env.TIKTOK_CLIENT_KEY!,
     response_type: "code",
-    scope: "user.info.basic,video.upload",
+    scope: "user.info.basic",
     redirect_uri: getRedirectURI(),
     state,
   });
-console.log("TikTok redirect_uri =", getRedirectURI());
+  console.log("TikTok redirect_uri =", getRedirectURI());
 
   res.redirect(`${TIKTOK_AUTH_URL}?${params.toString()}`);
 }
