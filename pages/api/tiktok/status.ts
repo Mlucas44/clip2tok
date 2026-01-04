@@ -50,8 +50,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // si terminé: libérer le verrou pour permettre un nouvel init
   if (DONE_STATES.includes(status) && session.last_publish_id === publish_id) {
     delete (session as any).last_publish_id;
+    delete (session as any).last_upload_url; // Nettoyer aussi l'upload_url
     await session.save();
-    console.info({ cid, publish_id, status }, "status: done -> lock released");
+    console.info({ cid, publish_id, status }, "status: done -> lock released (publish_id + upload_url cleared)");
   } else {
     console.info({ cid, publish_id, status }, "status: polling");
   }

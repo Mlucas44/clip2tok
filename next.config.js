@@ -11,7 +11,7 @@ const nextConfig = {
       "img-src 'self' data: https:",
       scriptSrc,
       "style-src 'self' 'unsafe-inline'",
-      "connect-src 'self' https:",
+      "connect-src 'self' https://open.tiktokapis.com https://open-upload-i18n.tiktokapis.com https://*.tiktokapis.com",
       "frame-ancestors 'none'",
     ].join("; ");
 
