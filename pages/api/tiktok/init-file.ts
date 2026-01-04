@@ -26,16 +26,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { video_size, chunk_size, total_chunk_count, title } = req.body ?? {};
 
-  if (!video_size || !chunk_size || !total_chunk_count) {
-    console.warn({ cid }, "init-file: missing_parameters");
+  // Validation stricte: caster en Number et vérifier que ce sont des entiers positifs
+  const videoSize = Number(video_size);
+  const chunkSize = Number(chunk_size);
+  const totalChunkCount = Number(total_chunk_count);
+
+  if (!Number.isInteger(videoSize) || videoSize <= 0) {
+    console.warn({ cid, video_size }, "init-file: invalid_video_size");
     return res.status(400).json({
-      error: "missing_parameters",
-      message: "video_size, chunk_size, and total_chunk_count are required"
+      error: "invalid_video_size",
+      message: "video_size must be a positive integer"
+    });
+  }
+
+  if (!Number.isInteger(chunkSize) || chunkSize <= 0) {
+    console.warn({ cid, chunk_size }, "init-file: invalid_chunk_size");
+    return res.status(400).json({
+      error: "invalid_chunk_size",
+      message: "chunk_size must be a positive integer"
+    });
+  }
+
+  if (!Number.isInteger(totalChunkCount) || totalChunkCount <= 0) {
+    console.warn({ cid, total_chunk_count }, "init-file: invalid_total_chunk_count");
+    return res.status(400).json({
+      error: "invalid_total_chunk_count",
+      message: "total_chunk_count must be a positive integer"
+    });
+  }
+
+  // Vérifier la cohérence mathématique: total_chunk_count = ceil(video_size / chunk_size)
+  const expectedChunkCount = Math.ceil(videoSize / chunkSize);
+  if (totalChunkCount !== expectedChunkCount) {
+    console.warn(
+      { cid, videoSize, chunkSize, totalChunkCount, expectedChunkCount },
+      "init-file: chunk_math_mismatch"
+    );
+    return res.status(400).json({
+      error: "chunk_math_mismatch",
+      message: `total_chunk_count (${totalChunkCount}) doesn't match expected value (${expectedChunkCount}). Expected: Math.ceil(${videoSize} / ${chunkSize}) = ${expectedChunkCount}`,
+      received: { video_size: videoSize, chunk_size: chunkSize, total_chunk_count: totalChunkCount },
+      expected: { total_chunk_count: expectedChunkCount }
     });
   }
 
   try {
-    console.info({ cid, video_size, chunk_size, total_chunk_count, title }, "init-file: start");
+    console.info(
+      { cid, videoSize, chunkSize, totalChunkCount, title },
+      "init-file: start (validated)"
+    );
 
     const r = await fetch("https://open.tiktokapis.com/v2/post/publish/inbox/video/init/", {
       method: "POST",
@@ -46,9 +85,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({
         source_info: {
           source: "FILE_UPLOAD",
-          video_size,
-          chunk_size,
-          total_chunk_count,
+          video_size: videoSize,
+          chunk_size: chunkSize,
+          total_chunk_count: totalChunkCount,
         },
         post_mode: { mode: "DRAFT" },
         title: title?.toString().slice(0, 150) || undefined,
