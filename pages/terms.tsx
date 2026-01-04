@@ -2,7 +2,9 @@ export default function Terms() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px' }}>
       <h1 className="h1" style={{ marginBottom: 32 }}>Conditions d'utilisation</h1>
-
+      <p className="muted">
+        Les présentes Conditions d’utilisation régissent l’utilisation de l’application StudioReels.
+      </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <section>
           <h2 className="h2" style={{ marginBottom: 12 }}>1. Acceptation des conditions</h2>

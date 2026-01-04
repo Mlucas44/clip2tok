@@ -2,7 +2,9 @@ export default function Privacy() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px' }}>
       <h1 className="h1" style={{ marginBottom: 32 }}>Politique de confidentialité</h1>
-
+      <p className="muted">
+        La présente politique de confidentialité s’applique à l’application StudioReels.
+      </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <section>
           <h2 className="h2" style={{ marginBottom: 12 }}>1. Données collectées</h2>
