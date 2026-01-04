@@ -160,11 +160,12 @@ export default function Connected() {
     setUploadProgress(0);
 
     try {
-      // Option A (quick win): 1 seul chunk = fichier complet
-      // Pour éviter "invalid total chunk count", on annonce 1 chunk avec size = fichier complet
+      // Upload chunké (requis par TikTok)
+      // TikTok exige Content-Range headers, donc on découpe en vrais chunks
+      const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB par chunk (recommandé TikTok)
       const videoSize = selectedFile.size;
-      const chunkSize = videoSize; // 1 chunk = tout le fichier
-      const totalChunks = 1;
+      const chunkSize = CHUNK_SIZE;
+      const totalChunks = Math.ceil(videoSize / chunkSize);
 
       // 1) Initialiser l'upload avec TikTok
       const initRes = await fetch("/api/tiktok/init-file", {
@@ -207,40 +208,80 @@ export default function Connected() {
 
       setPublishId(publish_id);
 
-      // 2) Uploader le fichier vers TikTok via l'upload_url
-      const xhr = new XMLHttpRequest();
+      // 2) Uploader le fichier vers TikTok CHUNK PAR CHUNK avec Content-Range
+      let uploadedBytes = 0;
 
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100);
-          setUploadProgress(progress);
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * chunkSize;
+        const end = Math.min(start + chunkSize, videoSize); // end EXCLUSIF pour slice
+        const chunk = selectedFile.slice(start, end);
+
+        // Content-Range: bytes start-endInclusive/total
+        // ⚠️ end dans le header est INCLUSIF (dernier byte)
+        const rangeStart = start;
+        const rangeEnd = end - 1; // end - 1 car inclusif
+        const contentRange = `bytes ${rangeStart}-${rangeEnd}/${videoSize}`;
+
+        console.log(`Uploading chunk ${chunkIndex + 1}/${totalChunks}: ${contentRange}`);
+
+        // Upload du chunk avec retry simple
+        let success = false;
+        let retries = 0;
+        const MAX_RETRIES = 2;
+
+        while (!success && retries <= MAX_RETRIES) {
+          try {
+            const response = await fetch(upload_url, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "video/mp4",
+                "Content-Range": contentRange,
+              },
+              body: chunk,
+            });
+
+            if (response.ok) {
+              success = true;
+              uploadedBytes += chunk.size;
+
+              // Mise à jour de la progress bar
+              const progress = Math.round((uploadedBytes / videoSize) * 100);
+              setUploadProgress(progress);
+            } else {
+              const errorText = await response.text().catch(() => "");
+              console.error(`Chunk ${chunkIndex} failed: ${response.status} ${response.statusText}`, errorText.slice(0, 200));
+
+              if (retries < MAX_RETRIES) {
+                retries++;
+                console.log(`Retrying chunk ${chunkIndex} (attempt ${retries + 1}/${MAX_RETRIES + 1})...`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * retries)); // backoff
+              } else {
+                throw new Error(`Chunk ${chunkIndex} failed after ${MAX_RETRIES + 1} attempts: ${response.status}`);
+              }
+            }
+          } catch (err: any) {
+            if (retries < MAX_RETRIES) {
+              retries++;
+              console.log(`Network error on chunk ${chunkIndex}, retrying... (${retries}/${MAX_RETRIES})`, err.message);
+              await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+            } else {
+              throw new Error(`Chunk ${chunkIndex} network error after retries: ${err.message}`);
+            }
+          }
         }
-      });
+      }
 
-      xhr.addEventListener("load", () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setStatus("PENDING");
-          pushHistory({
-            date: new Date().toISOString(),
-            title,
-            source: selectedFile.name,
-            publish_id,
-          });
-          startPolling(publish_id);
-          setUploadProgress(100);
-          setErrorMsg("✅ Upload terminé ! Traitement en cours...");
-        } else {
-          setErrorMsg(`Échec de l'upload: ${xhr.status} ${xhr.statusText}`);
-        }
+      // 3) Tous les chunks uploadés → démarrer le polling
+      setStatus("PENDING");
+      pushHistory({
+        date: new Date().toISOString(),
+        title,
+        source: selectedFile.name,
+        publish_id,
       });
-
-      xhr.addEventListener("error", () => {
-        setErrorMsg("Erreur réseau pendant l'upload. Réessayez.");
-      });
-
-      xhr.open("PUT", upload_url);
-      xhr.setRequestHeader("Content-Type", "video/mp4");
-      xhr.send(selectedFile);
+      startPolling(publish_id);
+      setUploadProgress(100);
+      setErrorMsg("✅ Upload terminé ! Traitement en cours...");
 
     } catch (e: any) {
       setErrorMsg(`Erreur pendant l'upload: ${e?.message}`);
