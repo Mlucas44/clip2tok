@@ -49,6 +49,8 @@ export default function Connected() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [initLoading, setInitLoading] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [localFile, setLocalFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [history, setHistory] = useState<HistoryItem[]>([]);
   useEffect(() => {
@@ -102,6 +104,54 @@ export default function Connected() {
       } catch { }
     }, 2000);
   };
+
+  const onPickFile = (file: File) => {
+    // validations simples
+    if (!file.type.startsWith("video/")) {
+      setErrorMsg("Merci de sélectionner un fichier vidéo.");
+      return;
+    }
+    if (file.size > 250 * 1024 * 1024) { // 250MB exemple
+      setErrorMsg("Fichier trop volumineux (max 250MB pour ce test).");
+      return;
+    }
+    setErrorMsg(null);
+    setLocalFile(file);
+  };
+
+  const uploadLocalFile = async () => {
+    if (!localFile) return;
+
+    setUploading(true);
+    setErrorMsg(null);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", localFile);
+      fd.append("filename", localFile.name);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: fd,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.public_url) {
+        setErrorMsg(data?.error || "Upload échoué.");
+        return;
+      }
+
+      // ✅ on récupère une URL accessible par TikTok
+      setVideoUrl(data.public_url);
+      setErrorMsg("✅ Vidéo uploadée. Tu peux maintenant cliquer sur Envoyer.");
+    } catch (e) {
+      setErrorMsg("Erreur réseau pendant l'upload.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
@@ -159,7 +209,7 @@ export default function Connected() {
 
   return (
     <>
-      <h1 className="h1">Connecté ✓ dd</h1>
+      <h1 className="h1">Connecté ✓</h1>
       <p className="muted">Testez un upload en brouillon : fichier local ou URL publique.</p>
 
       <div className="two-col mt16">
@@ -189,6 +239,72 @@ export default function Connected() {
 
           {errorMsg && <div className="alert info mt16">{errorMsg}</div>}
         </section>
+
+        <section className="card">
+          <div className="card-header">
+            <h2 className="card-title">Upload depuis votre PC</h2>
+            <div className="muted">1) Glissez une vidéo 2) Upload 3) Envoyer</div>
+          </div>
+
+          <div
+            className="dropzone"
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const f = e.dataTransfer.files?.[0];
+              if (f) onPickFile(f);
+            }}
+            style={{
+              border: "2px dashed #444",
+              borderRadius: 12,
+              padding: 20,
+              textAlign: "center",
+              cursor: "pointer"
+            }}
+            onClick={() => document.getElementById("video-file-input")?.click()}
+          >
+            <input
+              id="video-file-input"
+              type="file"
+              accept="video/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onPickFile(f);
+              }}
+            />
+
+            {!localFile ? (
+              <div>
+                <div style={{ fontWeight: 600 }}>Glissez-déposez votre vidéo ici</div>
+                <div className="muted" style={{ marginTop: 8 }}>…ou cliquez pour choisir un fichier</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontWeight: 600 }}>{localFile.name}</div>
+                <div className="muted" style={{ marginTop: 6 }}>
+                  {(localFile.size / (1024 * 1024)).toFixed(1)} MB
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt12" />
+          <button
+            className="btn"
+            onClick={uploadLocalFile}
+            disabled={!localFile || uploading}
+            title={!localFile ? "Choisissez une vidéo" : "Uploader la vidéo"}
+          >
+            {uploading ? "Upload…" : "Uploader la vidéo"}
+          </button>
+
+          <div className="muted mt12">
+            Après upload, l’URL sera remplie automatiquement dans le champ “Upload depuis URL”.
+          </div>
+        </section>
+
 
         <section className="card">
           <h3 className="h2">Historique (local)</h3>
