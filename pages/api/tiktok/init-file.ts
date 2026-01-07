@@ -16,30 +16,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Vérifier si un upload est déjà en cours
   if (session.last_publish_id) {
-    console.info(
-      { cid, publish_id: session.last_publish_id, has_upload_url: !!session.last_upload_url },
-      "init-file: already_in_progress"
-    );
-
-    // Si on a encore l'upload_url en session, on peut reprendre
-    if (session.last_upload_url) {
-      return res.status(200).json({
-        ok: true,
-        publish_id: session.last_publish_id,
-        upload_url: session.last_upload_url,
-        already_in_progress: true,
-        can_resume: true,
-      });
-    }
-
-    // Sinon, upload_url perdu (expiration 1h TikTok) → il faut reset
-    console.warn({ cid, publish_id: session.last_publish_id }, "init-file: upload_url expired or missing");
+    console.info({ cid, publish_id: session.last_publish_id }, "init-file: already_in_progress");
     return res.status(200).json({
       ok: true,
       publish_id: session.last_publish_id,
       already_in_progress: true,
-      can_resume: false,
-      message: "Upload en cours mais URL expirée. Veuillez réinitialiser.",
     });
   }
 
@@ -137,9 +118,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = JSON.parse(raw);
     const payload = data.data ?? data;
 
-    // Stocker publish_id ET upload_url en session pour bloquer les doublons et permettre le resume
+    // Stocker publish_id en session pour bloquer les doublons
     session.last_publish_id = payload.publish_id;
-    session.last_upload_url = payload.upload_url || undefined; // Stocker l'URL (valide 1h selon TikTok)
     await session.save();
 
     console.info(
@@ -156,7 +136,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       publish_id: payload.publish_id,
       upload_url: payload.upload_url,
       already_in_progress: false,
-      can_resume: true,
     });
   } catch (e: any) {
     console.error({ cid, error: e?.message }, "init-file: crash");

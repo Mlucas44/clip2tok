@@ -6,7 +6,7 @@ type InitResp =
   | { ok: true; publish_id: string; request_id?: string | null; already_in_progress?: boolean }
   | { ok?: false; error: string; message?: string };
 type InitFileResp =
-  | { ok: true; publish_id: string; upload_url?: string; already_in_progress?: boolean; can_resume?: boolean; message?: string }
+  | { ok: true; publish_id: string; upload_url: string; already_in_progress?: boolean }
   | { ok?: false; error: string; message?: string };
 type StatusResp =
   | { ok: true; status: Status; data: any }
@@ -192,19 +192,7 @@ export default function Connected() {
         return;
       }
 
-      const { publish_id, upload_url, can_resume, message } = initData;
-
-      // Guard: si pas d'upload_url et can_resume=false, afficher erreur + bouton reset
-      if (!upload_url) {
-        if (can_resume === false) {
-          setErrorMsg(message || "Upload en cours mais URL expirée. Cliquez sur 'Réinitialiser l'upload' ci-dessous.");
-          setPublishId(publish_id);
-          return;
-        }
-        setErrorMsg("Erreur: pas d'upload_url reçu de TikTok. Réessayez.");
-        return;
-      }
-
+      const { publish_id, upload_url } = initData;
       setPublishId(publish_id);
 
       // 2) Uploader le fichier vers TikTok via l'upload_url
@@ -255,27 +243,6 @@ export default function Connected() {
     if (status === "PENDING" || status === "PROCESSING") return false;
     return true;
   }, [selectedFile, uploading, status]);
-
-  const onResetUpload = async () => {
-    try {
-      const res = await fetch("/api/tiktok/reset-upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setErrorMsg(null);
-        setPublishId(null);
-        setStatus(null);
-        setUploadProgress(0);
-        setErrorMsg("✅ Upload réinitialisé. Vous pouvez recommencer.");
-      } else {
-        setErrorMsg("Erreur lors de la réinitialisation.");
-      }
-    } catch {
-      setErrorMsg("Erreur réseau lors de la réinitialisation.");
-    }
-  };
 
   return (
     <>
@@ -355,15 +322,6 @@ export default function Connected() {
           <button className="btn primary" onClick={onFileUpload} disabled={!canUploadFile} title={!canUploadFile ? "Sélectionnez un fichier vidéo" : "Envoyer"}>
             {uploading ? <><span className="spinner"/>Upload en cours...</> : "Envoyer"}
           </button>
-
-          {/* Bouton reset si upload bloqué */}
-          {errorMsg && errorMsg.includes("expirée") && (
-            <div style={{ marginTop: 12 }}>
-              <button className="btn" onClick={onResetUpload} style={{ width: '100%', backgroundColor: '#f59e0b', color: 'white' }}>
-                Réinitialiser l'upload
-              </button>
-            </div>
-          )}
         </section>
 
         {/* Upload depuis URL */}

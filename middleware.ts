@@ -9,7 +9,7 @@ const CSP_PROD = [
   "img-src 'self' data: https:",
   "style-src 'self' 'unsafe-inline'",
   "script-src 'self'",
-  "connect-src 'self' https://open.tiktokapis.com https://open-upload-i18n.tiktokapis.com https://*.tiktokapis.com",
+  "connect-src 'self' https://open.tiktokapis.com",
   "font-src 'self' https:",
   "frame-ancestors 'none'",
 ].join("; ");
@@ -19,7 +19,7 @@ const CSP_DEV = [
   "img-src 'self' data: blob: https:",        // blob: utile parfois en dev
   "style-src 'self' 'unsafe-inline'",
   "script-src 'self' 'unsafe-eval' blob:",    // <-- autorise eval pour react-refresh
-  "connect-src 'self' https://open.tiktokapis.com https://open-upload-i18n.tiktokapis.com https://*.tiktokapis.com ws: wss:", // <-- HMR via WebSocket + TikTok upload
+  "connect-src 'self' https://open.tiktokapis.com ws: wss:", // <-- HMR via WebSocket
   "font-src 'self' https:",
   "frame-ancestors 'none'",
 ].join("; ");

@@ -18,7 +18,6 @@ export interface SessionData {
       expires_at?: number;
     };
   last_publish_id?: string;
-  last_upload_url?: string; // Pour reprendre un upload FILE_UPLOAD en cours
 }
 
 export const sessionOptions: SessionOptions = {
