@@ -89,21 +89,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
-  // Log détaillé pour debugging (sans access_token)
-  console.info(
-    {
-      cid,
-      videoSize,
-      chunkSize,
-      totalChunkCount,
-      expectedChunkCount,
-      title: title ? "present" : "absent",
-      calculation: `Math.ceil(${videoSize} / ${chunkSize}) = ${expectedChunkCount}`
-    },
-    "init-file: params validated, calling TikTok"
-  );
-
   try {
+    console.info(
+      { cid, videoSize, chunkSize, totalChunkCount, title },
+      "init-file: start (validated)"
+    );
 
     const r = await fetch("https://open.tiktokapis.com/v2/post/publish/inbox/video/init/", {
       method: "POST",
@@ -156,10 +146,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       {
         cid,
         publish_id: payload.publish_id,
-        upload_url: payload.upload_url ? "present (length=" + payload.upload_url.length + ")" : "missing",
-        upload_url_domain: payload.upload_url ? new URL(payload.upload_url).hostname : null
+        upload_url: payload.upload_url ? "present" : "missing"
       },
-      "init-file: success, TikTok returned upload_url"
+      "init-file: success"
     );
 
     return res.status(200).json({
