@@ -160,19 +160,16 @@ export default function Connected() {
     setUploadProgress(0);
 
     try {
-      // Option A (quick win): 1 seul chunk = fichier complet
-      // Pour éviter "invalid total chunk count", on annonce 1 chunk avec size = fichier complet
-      const videoSize = selectedFile.size;
-      const chunkSize = videoSize; // 1 chunk = tout le fichier
-      const totalChunks = 1;
+      const CHUNK_SIZE = 10 * 1024 * 1024; // 10 MB par chunk
+      const totalChunks = Math.ceil(selectedFile.size / CHUNK_SIZE);
 
       // 1) Initialiser l'upload avec TikTok
       const initRes = await fetch("/api/tiktok/init-file", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          video_size: videoSize,
-          chunk_size: chunkSize,
+          video_size: selectedFile.size,
+          chunk_size: CHUNK_SIZE,
           total_chunk_count: totalChunks,
           title,
         }),

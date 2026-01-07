@@ -2,9 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "../../../lib/session";
 
-// États finaux qui doivent libérer le verrou session.last_publish_id
-// IMPORTANT: Inclut "SUCCEEDED" car c'est ce que TikTok renvoie en production
-const DONE_STATES = ["DONE", "SUCCESS", "SUCCEEDED", "FINISHED", "FAILED", "ERROR", "COMPLETED"];
+const DONE_STATES = ["DONE", "SUCCESS", "FINISHED", "FAILED", "ERROR", "COMPLETED"];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const cid = (req.headers["x-correlation-id"] as string) || "no-cid";
