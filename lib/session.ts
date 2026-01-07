@@ -1,22 +1,23 @@
-// web/lib/session.ts
+// lib/session.ts
 import {
   getIronSession,
   type SessionOptions,
   type IronSession,
 } from "iron-session";
-import type { NextApiRequest, NextApiResponse } from "next";
 
-// 👇 Ton modèle de session
+import type { NextApiRequest, NextApiResponse } from "next";
+import type { IncomingMessage, ServerResponse } from "http";
+
 export interface SessionData {
   oauth?: { state: string; startedAt: number };
   user?: {
-      access_token?: string;
-      open_id?: string;
-      openId?: string; // si historique différent
-      scopes?: string[];
-      scope?: string;  // fallback string
-      expires_at?: number;
-    };
+    access_token?: string;
+    open_id?: string;
+    openId?: string;
+    scopes?: string[];
+    scope?: string;
+    expires_at?: number;
+  };
   last_publish_id?: string;
 }
 
@@ -29,10 +30,10 @@ export const sessionOptions: SessionOptions = {
   },
 };
 
-// 👇 On renvoie une IronSession typée
+
 export async function getSession(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextApiRequest | IncomingMessage,
+  res: NextApiResponse | ServerResponse
 ): Promise<IronSession<SessionData>> {
-  return getIronSession<SessionData>(req, res, sessionOptions);
+  return getIronSession<SessionData>(req as any, res as any, sessionOptions);
 }

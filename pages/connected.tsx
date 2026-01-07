@@ -1,5 +1,33 @@
 // pages/connected.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { GetServerSideProps } from "next";
+import { getSession } from "../lib/session";
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getSession(req, res);
+
+  const user = session.user;
+  const openId = user?.open_id ?? user?.openId ?? null;
+
+  // ✅ Optionnel mais recommandé: si tu as expires_at, on vérifie
+  const expiresAt = user?.expires_at;
+  const isExpired =
+    typeof expiresAt === "number" && expiresAt > 0
+      ? // si expires_at est en secondes, convertis. Ici j’assume ms:
+      Date.now() >= expiresAt
+      : false;
+
+  if (!openId || isExpired) {
+    // (optionnel) on détruit la session si expirée
+    if (isExpired) await session.destroy();
+
+    return {
+      redirect: { destination: "/api/auth/tiktok", permanent: false },
+    };
+  }
+
+  return { props: {} };
+};
 
 type Status = "PENDING" | "PROCESSING" | "SUCCEEDED" | "FAILED" | "UNKNOWN";
 type InitResp =
@@ -13,6 +41,7 @@ type HistoryItem = { date: string; title?: string; source: string; publish_id: s
 const LOCAL_KEY = "tiktok_upload_history_v1";
 
 export default function Connected() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [title, setTitle] = useState("");
   const [publishId, setPublishId] = useState<string | null>(null);
@@ -23,7 +52,19 @@ export default function Connected() {
 
   const [history, setHistory] = useState<HistoryItem[]>([]);
   useEffect(() => {
-    try { const raw = localStorage.getItem(LOCAL_KEY); if (raw) setHistory(JSON.parse(raw)); } catch {}
+    try { const raw = localStorage.getItem(LOCAL_KEY); if (raw) setHistory(JSON.parse(raw)); } catch { }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        const data = await res.json();
+        setIsAuthenticated(Boolean(data?.open_id));
+      } catch {
+        setIsAuthenticated(false);
+      }
+    })();
   }, []);
   const pushHistory = (item: HistoryItem) => {
     const next = [item, ...history].slice(0, 50);
@@ -58,7 +99,7 @@ export default function Connected() {
           timerRef.current = null;
           setPolling(false);
         }
-      } catch {}
+      } catch { }
     }, 2000);
   };
 
@@ -91,11 +132,34 @@ export default function Connected() {
     finally { setInitLoading(false); }
   };
 
-  const copyPublishId = async () => { if (publishId) try { await navigator.clipboard.writeText(publishId); } catch {} };
+  const copyPublishId = async () => { if (publishId) try { await navigator.clipboard.writeText(publishId); } catch { } };
+
+  if (isAuthenticated === null) {
+    return (
+      <div style={{ textAlign: "center", padding: "48px 16px" }}>
+        <span className="spinner" style={{ width: 32, height: 32 }} />
+        <p className="muted" style={{ marginTop: 16 }}>Vérification de l'authentification...</p>
+      </div>
+    );
+  }
+
+  if (isAuthenticated === false) {
+    return (
+      <div style={{ textAlign: "center", padding: "48px 16px", maxWidth: 480, margin: "0 auto" }}>
+        <h1 className="h1">Accès refusé</h1>
+        <p className="muted" style={{ marginTop: 16 }}>
+          Vous devez être connecté avec TikTok pour accéder à cette page.
+        </p>
+        <a href="/api/auth/tiktok" className="btn primary" style={{ marginTop: 24 }}>
+          Se connecter avec TikTok
+        </a>
+      </div>
+    );
+  }
 
   return (
     <>
-      <h1 className="h1">Connecté ✓</h1>
+      <h1 className="h1">Connecté ✓ dd</h1>
       <p className="muted">Testez un upload en brouillon : fichier local ou URL publique.</p>
 
       <div className="two-col mt16">
@@ -110,14 +174,14 @@ export default function Connected() {
           <input className="input" placeholder="Titre (optionnel)" value={title} onChange={(e) => setTitle(e.target.value)} />
           <div className="mt12" />
           <button className="btn primary" onClick={onInit} disabled={!canSend} title={!canSend ? "Envoi verrouillé pendant le traitement en cours" : "Envoyer"}>
-            {initLoading ? <><span className="spinner"/>Initialisation…</> : "Envoyer"}
+            {initLoading ? <><span className="spinner" />Initialisation…</> : "Envoyer"}
           </button>
 
           <div className="mt16 kv">
             <div className="muted">publish_id</div>
             <div className="mono">
               {publishId ?? "—"}{" "}
-              {publishId && <button className="btn" style={{marginLeft:8}} onClick={copyPublishId}>Copier</button>}
+              {publishId && <button className="btn" style={{ marginLeft: 8 }} onClick={copyPublishId}>Copier</button>}
             </div>
             <div className="muted">&nbsp;</div>
             <div />
@@ -140,7 +204,7 @@ export default function Connected() {
                   <tr key={i}>
                     <td>{new Date(h.date).toLocaleString()}</td>
                     <td>{h.title || "—"}</td>
-                    <td><span title={h.source} style={{display:"inline-block",maxWidth:360,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{h.source}</span></td>
+                    <td><span title={h.source} style={{ display: "inline-block", maxWidth: 360, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{h.source}</span></td>
                     <td className="mono">{h.publish_id}</td>
                   </tr>
                 ))}
