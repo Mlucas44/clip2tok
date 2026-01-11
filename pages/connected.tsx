@@ -254,7 +254,7 @@ export default function Connected() {
           {errorMsg && <div className="alert info mt16">{errorMsg}</div>}
         </section>
 
-        <section className="card">
+        {/* <section className="card">
           <div className="card-header">
             <h2 className="card-title">Upload depuis votre PC</h2>
             <div className="muted">1) Glissez une vidéo 2) Upload 3) Envoyer</div>
@@ -317,7 +317,7 @@ export default function Connected() {
           <div className="muted mt12">
             Après upload, l’URL sera remplie automatiquement dans le champ “Upload depuis URL”.
           </div>
-        </section>
+        </section> */}
 
 
         <section className="card">
