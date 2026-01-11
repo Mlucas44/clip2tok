@@ -20,7 +20,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   console.info({ cid, publish_id }, "status: query");
-  // const r = await fetch("https://open.tiktokapis.com/v2/post/publish/inbox/video/query/", {
   const r = await fetch("https://open.tiktokapis.com/v2/post/publish/status/fetch/", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json; charset=utf-8" },
@@ -50,10 +49,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       payload?.share_status ??
       payload?.task_status ??
       "UNKNOWN").toString().toUpperCase();
-
-
-  // const payload = data.data ?? data;
-  // const status = (payload?.status ?? payload?.task_status ?? "UNKNOWN").toString().toUpperCase();
 
   // si terminé: libérer le verrou pour permettre un nouvel init
   if (DONE_STATES.includes(status) && session.last_publish_id === publish_id) {

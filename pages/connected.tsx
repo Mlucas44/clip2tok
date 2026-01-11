@@ -93,14 +93,28 @@ export default function Connected() {
           setErrorMsg("Le serveur TikTok n’a pas encore renvoyé de mise à jour. C’est normal en mode sandbox, réessayez dans quelques instants.");
           return;
         }
-        const rawStatus = (data.status ?? "UNKNOWN") as Status;
-        setStatus(rawStatus);
-        if (rawStatus === "SUCCEEDED") setErrorMsg("✅ Vidéo envoyée en brouillon ! Retrouvez-la dans votre Inbox TikTok.");
-        if (rawStatus === "SUCCEEDED" || rawStatus === "FAILED") {
+        const s = (data.status ?? "UNKNOWN").toString().toUpperCase();
+
+        // TikTok renvoie souvent SEND_TO_USER_INBOX quand c'est OK (brouillon/inbox)
+        const mapped: Status =
+          s === "SEND_TO_USER_INBOX" ? "SUCCEEDED" :
+            s === "PENDING" ? "PENDING" :
+              s === "PROCESSING" ? "PROCESSING" :
+                s.includes("FAIL") || s.includes("ERROR") ? "FAILED" :
+                  "UNKNOWN";
+
+        setStatus(mapped);
+
+        if (mapped === "SUCCEEDED") {
+          setErrorMsg("✅ Vidéo envoyée en brouillon ! Retrouvez-la dans votre Inbox TikTok.");
+        }
+
+        if (mapped === "SUCCEEDED" || mapped === "FAILED") {
           if (timerRef.current) clearInterval(timerRef.current);
           timerRef.current = null;
           setPolling(false);
         }
+
       } catch { }
     }, 2000);
   };
